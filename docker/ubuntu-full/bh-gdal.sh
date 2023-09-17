@@ -21,21 +21,21 @@ wget -q "https://github.com/${GDAL_REPOSITORY}/archive/${GDAL_VERSION}.tar.gz" \
 (
     cd gdal
 
-    if test "${RSYNC_REMOTE:-}" != ""; then
-        echo "Downloading cache..."
-        rsync -ra "${RSYNC_REMOTE}/gdal/${GCC_ARCH}/" "$HOME/"
-        echo "Finished"
+		if test "${RSYNC_REMOTE:-}" != ""; then
+				echo "Downloading cache..."
+				rsync -ra "${RSYNC_REMOTE}/gdal/${GCC_ARCH}/" "$HOME/"
+				echo "Finished"
 
-        # Little trick to avoid issues with Python bindings
-        printf "#!/bin/sh\nccache %s-linux-gnu-gcc \$*" "${GCC_ARCH}" > ccache_gcc.sh
-        chmod +x ccache_gcc.sh
-        printf "#!/bin/sh\nccache %s-linux-gnu-g++ \$*" "${GCC_ARCH}" > ccache_g++.sh
-        chmod +x ccache_g++.sh
-        export CC=$PWD/ccache_gcc.sh
-        export CXX=$PWD/ccache_g++.sh
+				# Little trick to avoid issues with Python bindings
+				printf "#!/bin/sh\nccache %s-linux-gnu-gcc \$*" "${GCC_ARCH}" > ccache_gcc.sh
+				chmod +x ccache_gcc.sh
+				printf "#!/bin/sh\nccache %s-linux-gnu-g++ \$*" "${GCC_ARCH}" > ccache_g++.sh
+				chmod +x ccache_g++.sh
+				export CC=$PWD/ccache_gcc.sh
+				export CXX=$PWD/ccache_g++.sh
 
-        ccache -M 1G
-    fi
+				ccache -M 1G
+		fi
 
     export CFLAGS="-DPROJ_RENAME_SYMBOLS -O2 -g"
     export CXXFLAGS="-DPROJ_RENAME_SYMBOLS -DPROJ_INTERNAL_CPP_NAMESPACE -O2 -g"
@@ -61,6 +61,13 @@ wget -q "https://github.com/${GDAL_REPOSITORY}/archive/${GDAL_VERSION}.tar.gz" \
       export GDAL_CMAKE_EXTRA_OPTS="${GDAL_CMAKE_EXTRA_OPTS} -DFileGDB_ROOT:PATH=/usr/local/FileGDB_API -DFileGDB_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libFileGDBAPI.so"
       export LD_LIBRARY_PATH=/usr/local/FileGDB_API/lib:${LD_LIBRARY_PATH:-}
     fi
+
+		MRSID_ROOT="/usr/local/MrSID_DSDK/Raster_DSDK"
+		if [ -d "${MRSID_ROOT}" ]; then
+      ln -s ${MRSID_ROOT}/lib/libltidsdk.so /usr/lib/x86_64-linux-gnu
+			export GDAL_CMAKE_EXTRA_OPTS="${GDAL_CMAKE_EXTRA_OPTS} -DMRSID_ROOT:PATH=${MRSID_ROOT} -DMRSID_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libltidsdk.so -DMRSID_INCLUDE_DIR:FILEPATH=${MRSID_ROOT}/include"
+		fi
+
     echo "${GDAL_CMAKE_EXTRA_OPTS}"
     cmake .. \
         -DCMAKE_INSTALL_PREFIX=/usr \
@@ -75,17 +82,17 @@ wget -q "https://github.com/${GDAL_REPOSITORY}/archive/${GDAL_VERSION}.tar.gz" \
 
     cd ..
 
-    if [ -n "${RSYNC_REMOTE:-}" ]; then
-        ccache -s
+		if [ -n "${RSYNC_REMOTE:-}" ]; then
+				ccache -s
 
-        echo "Uploading cache..."
-        rsync -ra --delete "$HOME/.cache" "${RSYNC_REMOTE}/gdal/${GCC_ARCH}/"
-        echo "Finished"
+				echo "Uploading cache..."
+				rsync -ra --delete "$HOME/.cache" "${RSYNC_REMOTE}/gdal/${GCC_ARCH}/"
+				echo "Finished"
 
-        rm -rf "$HOME/.cache"
-        unset CC
-        unset CXX
-    fi
+				rm -rf "$HOME/.cache"
+				unset CC
+				unset CXX
+		fi
 )
 
 rm -rf gdal
