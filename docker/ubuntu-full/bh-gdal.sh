@@ -61,6 +61,13 @@ wget -q "https://github.com/${GDAL_REPOSITORY}/archive/${GDAL_VERSION}.tar.gz" \
       export GDAL_CMAKE_EXTRA_OPTS="${GDAL_CMAKE_EXTRA_OPTS} -DFileGDB_ROOT:PATH=/usr/local/FileGDB_API -DFileGDB_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libFileGDBAPI.so"
       export LD_LIBRARY_PATH=/usr/local/FileGDB_API/lib:${LD_LIBRARY_PATH:-}
     fi
+
+		MRSID_ROOT="/usr/local/MrSID_DSDK/Raster_DSDK"
+		if [ -d "${MRSID_ROOT}" ]; then
+      ln -s ${MRSID_ROOT}/lib/libltidsdk.so /usr/lib/x86_64-linux-gnu
+			export GDAL_CMAKE_EXTRA_OPTS="${GDAL_CMAKE_EXTRA_OPTS} -DMRSID_ROOT:PATH=${MRSID_ROOT} -DMRSID_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libltidsdk.so -DMRSID_INCLUDE_DIR:FILEPATH=${MRSID_ROOT}/include"
+		fi
+
     echo "${GDAL_CMAKE_EXTRA_OPTS}"
     cmake .. \
         -DCMAKE_INSTALL_PREFIX=/usr \
