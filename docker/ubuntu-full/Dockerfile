@@ -227,7 +227,7 @@ RUN . /buildscripts/bh-set-envvars.sh \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Arrow C++
-ARG ARROW_VERSION=15.0.1-1
+ARG ARROW_VERSION=15.0.2-1
 # ARROW_SOVERSION to be updated in the "Build final image" section too
 ARG ARROW_SOVERSION=1500
 RUN . /buildscripts/bh-set-envvars.sh \
@@ -277,6 +277,15 @@ ARG GDAL_RELEASE_DATE
 ARG GDAL_BUILD_IS_RELEASE
 ARG GDAL_REPOSITORY=OSGeo/gdal
 
+# Stage MrSID
+COPY ./MrSID_DSDK-9.5.5.5244-rhel9.x86-64.gcc1131.zip /
+RUN unzip MrSID_DSDK-9.5.5.5244-rhel9.x86-64.gcc1131.zip && \
+    mv MrSID_DSDK-9.5.5.5244-rhel9.x86-64.gcc1131 /usr/local/MrSID_DSDK && \
+    cp /usr/local/MrSID_DSDK/Raster_DSDK/lib/* /build_thirdparty/usr/lib/x86_64-linux-gnu && \
+    apt-get update -y && \
+    apt-get install -y --fix-missing --no-install-recommends libtbb2-dev${APT_ARCH_SUFFIX} && \
+    rm -rf /var/lib/apt/lists/*
+
 # Build GDAL
 
 COPY ./bh-gdal.sh /buildscripts/bh-gdal.sh
@@ -316,6 +325,7 @@ RUN apt-get update \
         libdeflate0 libblosc1 liblz4-1 \
         libbrotli1 \
         libarchive13 \
+        libtbb2 \
         libaec0 \
         libspdlog1 \
         python-is-python3 \
